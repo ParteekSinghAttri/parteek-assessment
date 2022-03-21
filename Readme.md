@@ -1,6 +1,6 @@
 # parteek-assessment
 
-TODO description
+Python Engineer Assessment Test for steel-eye
 
 ### Sample run
 
