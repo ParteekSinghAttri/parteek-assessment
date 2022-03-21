@@ -2,7 +2,7 @@
 import csv
 import logging
 import os
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as et
 import zipfile
 
 import boto3
@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 def main(solr_url):
-
     logger.info("Step 1: Download the xml from the link")
     downloaded_xml = download_xml(solr_url)
     logger.info('File downloaded: %s', downloaded_xml)
@@ -81,7 +80,7 @@ def download_zip(zip_url):
 
 def parse_xml(xml_file):
     # create element tree object
-    tree = ET.parse(xml_file)
+    tree = et.parse(xml_file)
 
     # get the result element
     result = list(tree.iter('result'))[0]
@@ -109,7 +108,7 @@ def xml_to_csv(xml_file):
     csv_file = "step4_csv_file.csv"
 
     # parse XML
-    xml = ET.parse(xml_file)
+    xml = et.parse(xml_file)
 
     # create CSV file
     with open(csv_file, 'w', newline='', encoding='utf-8') as csvfile:
