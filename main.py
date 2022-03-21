@@ -71,7 +71,7 @@ def download_zip(zip_url):
     # saving the zip file
     with open(downloaded_zip, "wb") as zip_file:
         for chunk in r.iter_content(chunk_size=1024):
-            # writing one chunk at a time to pdf file
+            # writing one chunk at a time to zip file
             if chunk:
                 zip_file.write(chunk)
     return downloaded_zip
