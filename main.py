@@ -1,16 +1,42 @@
 # importing the required modules
 import csv
+import logging
 import os
-
-import requests
 import xml.etree.ElementTree as ET
 import zipfile
 
 import boto3
-import logging
+import requests
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def main(solr_url):
+
+    logger.info("Step 1: Download the xml from the link")
+    downloaded_xml = download_xml(solr_url)
+    logger.info('File downloaded: %s', downloaded_xml)
+
+    logger.info("Step 2: From the xml, please parse through to the first download link whose file_type is DLTINS")
+    url_to_download = parse_xml(downloaded_xml)
+    logger.info('URL for download: %s', url_to_download)
+
+    logger.info("Step 2: and download the zip")
+    downloaded_zip = download_zip(url_to_download)
+    logger.info('Downloaded ZIP: %s', downloaded_zip)
+
+    logger.info("Step 3 Extract the xml from the zip")
+    extracted_xml = extract_zip(downloaded_zip)
+    logger.info('Extracted XML: %s', extracted_xml)
+
+    logger.info("Step 4 Convert the contents of the xml into a CSV")
+    csv_file = xml_to_csv(extracted_xml)
+    logger.info('Converted CSV: %s', csv_file)
+
+    logger.info("Step 5 Store the csv from step 4) in an AWS S3 bucket")
+    s3_link = upload_to_s3(csv_file)
+    logger.info('File uploaded. S3 link: %s', s3_link)
 
 
 def extract_zip(file_path):
@@ -26,9 +52,9 @@ def extract_zip(file_path):
     return extracted_xml
 
 
-def download_xml(url):
+def download_xml(xml_url):
     # creating HTTP response object from given url
-    resp = requests.get(url)
+    resp = requests.get(xml_url)
 
     downloaded_xml = "step1_downloaded.xml"
     # saving the xml file
@@ -38,9 +64,9 @@ def download_xml(url):
     return downloaded_xml
 
 
-def download_zip(url):
+def download_zip(zip_url):
     # creating HTTP response object from given url
-    r = requests.get(url, stream=True)
+    r = requests.get(zip_url, stream=True)
 
     downloaded_zip = "step2_downloaded.zip"
 
@@ -53,9 +79,9 @@ def download_zip(url):
     return downloaded_zip
 
 
-def parse_xml(xmlfile):
+def parse_xml(xml_file):
     # create element tree object
-    tree = ET.parse(xmlfile)
+    tree = ET.parse(xml_file)
 
     # get the result element
     result = list(tree.iter('result'))[0]
@@ -143,32 +169,6 @@ def upload_to_s3(csv_file):
             'Key': filename
         }
     )
-
-
-def main(solr_url):
-    logger.info("Step 1: Download the xml from the link")
-    downloaded_xml = download_xml(solr_url)
-    logger.info('File downloaded: %s', downloaded_xml)
-
-    logger.info("Step 2: From the xml, please parse through to the first download link whose file_type is DLTINS")
-    url_to_download = parse_xml(downloaded_xml)
-    logger.info('URL for download: %s', url_to_download)
-
-    logger.info("Step 2: and download the zip")
-    downloaded_zip = download_zip(url_to_download)
-    logger.info('Downloaded ZIP: %s', downloaded_zip)
-
-    logger.info("Step 3 Extract the xml from the zip")
-    extracted_xml = extract_zip(downloaded_zip)
-    logger.info('Extracted XML: %s', extracted_xml)
-
-    logger.info("Step 4 Convert the contents of the xml into a CSV")
-    csv_file = xml_to_csv(extracted_xml)
-    logger.info('Converted CSV: %s', csv_file)
-
-    logger.info("Step 5 Store the csv from step 4) in an AWS S3 bucket")
-    s3_link = upload_to_s3(csv_file)
-    logger.info('File uploaded. S3 link: %s', s3_link)
 
 
 if __name__ == "__main__":
